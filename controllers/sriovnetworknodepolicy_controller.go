@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/k8snetworkplumbingwg/sriov-network-operator/pkg/utils"
 	"os"
 	"sort"
 	"strings"
@@ -258,7 +259,7 @@ func (r *SriovNetworkNodePolicyReconciler) syncAllSriovNetworkNodeStates(np *sri
 		ns.Namespace = namespace
 		j, _ := json.Marshal(ns)
 		logger.Info("SriovNetworkNodeState CR", "content", j)
-		if err := r.syncSriovNetworkNodeState(np, npl, ns, &node, found.GetResourceVersion()); err != nil {
+		if err := r.syncSriovNetworkNodeState(np, npl, ns, &node, utils.HashConfigMap(found)); err != nil {
 			logger.Error(err, "Fail to sync", "SriovNetworkNodeState", ns.Name)
 			return err
 		}

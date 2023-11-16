@@ -22,6 +22,11 @@ import (
 	"github.com/vishvananda/netlink"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"crypto/sha256"
+	"encoding/hex"
+	corev1 "k8s.io/api/core/v1"
+	"sort"
+
 	dputils "github.com/k8snetworkplumbingwg/sriov-network-device-plugin/pkg/utils"
 
 	sriovnetworkv1 "github.com/k8snetworkplumbingwg/sriov-network-operator/api/v1"
@@ -792,6 +797,25 @@ func RunCommand(command string, args ...string) (string, error) {
 	err := cmd.Run()
 	glog.V(2).Infof("RunCommand(): out:(%s), err:(%v)", stdout.String(), err)
 	return stdout.String(), err
+}
+
+func HashConfigMap(cm *corev1.ConfigMap) string {
+	var keys []string
+	for k := range cm.Data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var concatenatedString string
+	for _, k := range keys {
+		concatenatedString += k + cm.Data[k]
+	}
+
+	hash := sha256.New()
+	hash.Write([]byte(concatenatedString))
+	hashed := hash.Sum(nil)
+
+	return hex.EncodeToString(hashed)
 }
 
 func hasMellanoxInterfacesInSpec(newState *sriovnetworkv1.SriovNetworkNodeState) bool {
